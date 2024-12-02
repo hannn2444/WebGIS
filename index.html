@@ -1,0 +1,1822 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/L.Control.Locate.min.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet-control-geocoder.Geocoder.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/L.Control.Locate.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet-control-geocoder.Geocoder.js"></script>
+        <script src="data/KoordinatKelompok_1.js"></script>
+        <script src="data/KoordinatMenfas_2.js"></script>
+        <script src="data/FiqhiAmel_3.js"></script>
+        <script src="data/FiqhiRayhan_4.js"></script>
+        <script src="data/FadhillaAgus_5.js"></script>
+        <script src="data/FadhillaShannia_6.js"></script>
+        <script src="data/FadhillaYouve_7.js"></script>
+        <script src="data/FadhillaNabila_8.js"></script>
+        <script src="data/FiqhiDezan_9.js"></script>
+        <script src="data/FiqhiNabila_10.js"></script>
+        <script src="data/FiqhiYouve_11.js"></script>
+        <script src="data/FiqhiShannia_12.js"></script>
+        <script src="data/FadhillaVajri_13.js"></script>
+        <script src="data/FiqhiAgus_14.js"></script>
+        <script src="data/FiqhiRafael_15.js"></script>
+        <script src="data/FiqhiVajri_16.js"></script>
+        <script src="data/FadhillaDezan_17.js"></script>
+        <script src="data/FadhillaAmel_18.js"></script>
+        <script src="data/FadhillaRafael_19.js"></script>
+        <script src="data/FadhillaRayhan_20.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+
+            if (e.target.feature.geometry.type === 'LineString' || e.target.feature.geometry.type === 'MultiLineString') {
+              highlightLayer.setStyle({
+                color: '#ffff00',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: '#ffff00',
+                fillOpacity: 1
+              });
+            }
+            highlightLayer.openPopup();
+        }
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:1
+        })
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // add class to format popup if it contains media
+		function addClassToPopupIfMedia(content, popup) {
+			var tempDiv = document.createElement('div');
+			tempDiv.innerHTML = content;
+			if (tempDiv.querySelector('td img')) {
+				popup._contentNode.classList.add('media');
+					// Delay to force the redraw
+					setTimeout(function() {
+						popup.update();
+					}, 10);
+			} else {
+				popup._contentNode.classList.remove('media');
+			}
+		}
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        L.control.locate({locateOptions: {maxZoom: 19}}).addTo(map);
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+            if (bounds_group.getLayers().length) {
+                map.fitBounds(bounds_group.getBounds());
+            }
+        }
+        map.createPane('pane_GoogleSatellite_0');
+        map.getPane('pane_GoogleSatellite_0').style.zIndex = 400;
+        var layer_GoogleSatellite_0 = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            pane: 'pane_GoogleSatellite_0',
+            opacity: 1.0,
+            attribution: '<a href="https://www.google.at/permissions/geoguidelines/attr-guide.html">Map data ©2015 Google</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 20
+        });
+        layer_GoogleSatellite_0;
+        map.addLayer(layer_GoogleSatellite_0);
+        function pop_KoordinatKelompok_1(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Lokasi</th>\
+                        <td>' + (feature.properties['Lokasi'] !== null ? autolinker.link(feature.properties['Lokasi'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">X</th>\
+                        <td>' + (feature.properties['X'] !== null ? autolinker.link(feature.properties['X'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Y</th>\
+                        <td>' + (feature.properties['Y'] !== null ? autolinker.link(feature.properties['Y'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_KoordinatKelompok_1_0() {
+            return {
+                pane: 'pane_KoordinatKelompok_1',
+                radius: 7.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,166,178,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_KoordinatKelompok_1');
+        map.getPane('pane_KoordinatKelompok_1').style.zIndex = 401;
+        map.getPane('pane_KoordinatKelompok_1').style['mix-blend-mode'] = 'normal';
+        var layer_KoordinatKelompok_1 = new L.geoJson(json_KoordinatKelompok_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_KoordinatKelompok_1',
+            layerName: 'layer_KoordinatKelompok_1',
+            pane: 'pane_KoordinatKelompok_1',
+            onEachFeature: pop_KoordinatKelompok_1,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_KoordinatKelompok_1_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_KoordinatKelompok_1);
+        map.addLayer(layer_KoordinatKelompok_1);
+        function pop_KoordinatMenfas_2(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Lokasi</th>\
+                        <td>' + (feature.properties['Lokasi'] !== null ? autolinker.link(feature.properties['Lokasi'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">x</th>\
+                        <td>' + (feature.properties['x'] !== null ? autolinker.link(feature.properties['x'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">y</th>\
+                        <td>' + (feature.properties['y'] !== null ? autolinker.link(feature.properties['y'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_KoordinatMenfas_2_0() {
+            return {
+                pane: 'pane_KoordinatMenfas_2',
+                radius: 7.0,
+                opacity: 1,
+                color: 'rgba(50,87,128,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(72,123,182,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_KoordinatMenfas_2');
+        map.getPane('pane_KoordinatMenfas_2').style.zIndex = 402;
+        map.getPane('pane_KoordinatMenfas_2').style['mix-blend-mode'] = 'normal';
+        var layer_KoordinatMenfas_2 = new L.geoJson(json_KoordinatMenfas_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_KoordinatMenfas_2',
+            layerName: 'layer_KoordinatMenfas_2',
+            pane: 'pane_KoordinatMenfas_2',
+            onEachFeature: pop_KoordinatMenfas_2,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_KoordinatMenfas_2_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_KoordinatMenfas_2);
+        map.addLayer(layer_KoordinatMenfas_2);
+        function pop_FiqhiAmel_3(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">DIST_KM</th>\
+                        <td>' + (feature.properties['DIST_KM'] !== null ? autolinker.link(feature.properties['DIST_KM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">DURATION_H</th>\
+                        <td>' + (feature.properties['DURATION_H'] !== null ? autolinker.link(feature.properties['DURATION_H'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PROFILE</th>\
+                        <td>' + (feature.properties['PROFILE'] !== null ? autolinker.link(feature.properties['PROFILE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PREF</th>\
+                        <td>' + (feature.properties['PREF'] !== null ? autolinker.link(feature.properties['PREF'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">OPTIONS</th>\
+                        <td>' + (feature.properties['OPTIONS'] !== null ? autolinker.link(feature.properties['OPTIONS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">FROM_ID</th>\
+                        <td>' + (feature.properties['FROM_ID'] !== null ? autolinker.link(feature.properties['FROM_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TO_ID</th>\
+                        <td>' + (feature.properties['TO_ID'] !== null ? autolinker.link(feature.properties['TO_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_FiqhiAmel_3_0() {
+            return {
+                pane: 'pane_FiqhiAmel_3',
+                opacity: 1,
+                color: 'rgba(21,8,176,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_FiqhiAmel_3');
+        map.getPane('pane_FiqhiAmel_3').style.zIndex = 403;
+        map.getPane('pane_FiqhiAmel_3').style['mix-blend-mode'] = 'normal';
+        var layer_FiqhiAmel_3 = new L.geoJson(json_FiqhiAmel_3, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_FiqhiAmel_3',
+            layerName: 'layer_FiqhiAmel_3',
+            pane: 'pane_FiqhiAmel_3',
+            onEachFeature: pop_FiqhiAmel_3,
+            style: style_FiqhiAmel_3_0,
+        });
+        bounds_group.addLayer(layer_FiqhiAmel_3);
+        map.addLayer(layer_FiqhiAmel_3);
+        function pop_FiqhiRayhan_4(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">DIST_KM</th>\
+                        <td>' + (feature.properties['DIST_KM'] !== null ? autolinker.link(feature.properties['DIST_KM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">DURATION_H</th>\
+                        <td>' + (feature.properties['DURATION_H'] !== null ? autolinker.link(feature.properties['DURATION_H'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PROFILE</th>\
+                        <td>' + (feature.properties['PROFILE'] !== null ? autolinker.link(feature.properties['PROFILE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PREF</th>\
+                        <td>' + (feature.properties['PREF'] !== null ? autolinker.link(feature.properties['PREF'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">OPTIONS</th>\
+                        <td>' + (feature.properties['OPTIONS'] !== null ? autolinker.link(feature.properties['OPTIONS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">FROM_ID</th>\
+                        <td>' + (feature.properties['FROM_ID'] !== null ? autolinker.link(feature.properties['FROM_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TO_ID</th>\
+                        <td>' + (feature.properties['TO_ID'] !== null ? autolinker.link(feature.properties['TO_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_FiqhiRayhan_4_0() {
+            return {
+                pane: 'pane_FiqhiRayhan_4',
+                opacity: 1,
+                color: 'rgba(140,176,6,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_FiqhiRayhan_4');
+        map.getPane('pane_FiqhiRayhan_4').style.zIndex = 404;
+        map.getPane('pane_FiqhiRayhan_4').style['mix-blend-mode'] = 'normal';
+        var layer_FiqhiRayhan_4 = new L.geoJson(json_FiqhiRayhan_4, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_FiqhiRayhan_4',
+            layerName: 'layer_FiqhiRayhan_4',
+            pane: 'pane_FiqhiRayhan_4',
+            onEachFeature: pop_FiqhiRayhan_4,
+            style: style_FiqhiRayhan_4_0,
+        });
+        bounds_group.addLayer(layer_FiqhiRayhan_4);
+        map.addLayer(layer_FiqhiRayhan_4);
+        function pop_FadhillaAgus_5(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">DIST_KM</th>\
+                        <td>' + (feature.properties['DIST_KM'] !== null ? autolinker.link(feature.properties['DIST_KM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">DURATION_H</th>\
+                        <td>' + (feature.properties['DURATION_H'] !== null ? autolinker.link(feature.properties['DURATION_H'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PROFILE</th>\
+                        <td>' + (feature.properties['PROFILE'] !== null ? autolinker.link(feature.properties['PROFILE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PREF</th>\
+                        <td>' + (feature.properties['PREF'] !== null ? autolinker.link(feature.properties['PREF'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">OPTIONS</th>\
+                        <td>' + (feature.properties['OPTIONS'] !== null ? autolinker.link(feature.properties['OPTIONS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">FROM_ID</th>\
+                        <td>' + (feature.properties['FROM_ID'] !== null ? autolinker.link(feature.properties['FROM_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TO_ID</th>\
+                        <td>' + (feature.properties['TO_ID'] !== null ? autolinker.link(feature.properties['TO_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_FadhillaAgus_5_0() {
+            return {
+                pane: 'pane_FadhillaAgus_5',
+                opacity: 1,
+                color: 'rgba(176,16,16,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_FadhillaAgus_5');
+        map.getPane('pane_FadhillaAgus_5').style.zIndex = 405;
+        map.getPane('pane_FadhillaAgus_5').style['mix-blend-mode'] = 'normal';
+        var layer_FadhillaAgus_5 = new L.geoJson(json_FadhillaAgus_5, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_FadhillaAgus_5',
+            layerName: 'layer_FadhillaAgus_5',
+            pane: 'pane_FadhillaAgus_5',
+            onEachFeature: pop_FadhillaAgus_5,
+            style: style_FadhillaAgus_5_0,
+        });
+        bounds_group.addLayer(layer_FadhillaAgus_5);
+        map.addLayer(layer_FadhillaAgus_5);
+        function pop_FadhillaShannia_6(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">DIST_KM</th>\
+                        <td>' + (feature.properties['DIST_KM'] !== null ? autolinker.link(feature.properties['DIST_KM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">DURATION_H</th>\
+                        <td>' + (feature.properties['DURATION_H'] !== null ? autolinker.link(feature.properties['DURATION_H'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PROFILE</th>\
+                        <td>' + (feature.properties['PROFILE'] !== null ? autolinker.link(feature.properties['PROFILE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PREF</th>\
+                        <td>' + (feature.properties['PREF'] !== null ? autolinker.link(feature.properties['PREF'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">OPTIONS</th>\
+                        <td>' + (feature.properties['OPTIONS'] !== null ? autolinker.link(feature.properties['OPTIONS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">FROM_ID</th>\
+                        <td>' + (feature.properties['FROM_ID'] !== null ? autolinker.link(feature.properties['FROM_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TO_ID</th>\
+                        <td>' + (feature.properties['TO_ID'] !== null ? autolinker.link(feature.properties['TO_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_FadhillaShannia_6_0() {
+            return {
+                pane: 'pane_FadhillaShannia_6',
+                opacity: 1,
+                color: 'rgba(111,99,176,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_FadhillaShannia_6');
+        map.getPane('pane_FadhillaShannia_6').style.zIndex = 406;
+        map.getPane('pane_FadhillaShannia_6').style['mix-blend-mode'] = 'normal';
+        var layer_FadhillaShannia_6 = new L.geoJson(json_FadhillaShannia_6, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_FadhillaShannia_6',
+            layerName: 'layer_FadhillaShannia_6',
+            pane: 'pane_FadhillaShannia_6',
+            onEachFeature: pop_FadhillaShannia_6,
+            style: style_FadhillaShannia_6_0,
+        });
+        bounds_group.addLayer(layer_FadhillaShannia_6);
+        map.addLayer(layer_FadhillaShannia_6);
+        function pop_FadhillaYouve_7(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">DIST_KM</th>\
+                        <td>' + (feature.properties['DIST_KM'] !== null ? autolinker.link(feature.properties['DIST_KM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">DURATION_H</th>\
+                        <td>' + (feature.properties['DURATION_H'] !== null ? autolinker.link(feature.properties['DURATION_H'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PROFILE</th>\
+                        <td>' + (feature.properties['PROFILE'] !== null ? autolinker.link(feature.properties['PROFILE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PREF</th>\
+                        <td>' + (feature.properties['PREF'] !== null ? autolinker.link(feature.properties['PREF'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">OPTIONS</th>\
+                        <td>' + (feature.properties['OPTIONS'] !== null ? autolinker.link(feature.properties['OPTIONS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">FROM_ID</th>\
+                        <td>' + (feature.properties['FROM_ID'] !== null ? autolinker.link(feature.properties['FROM_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TO_ID</th>\
+                        <td>' + (feature.properties['TO_ID'] !== null ? autolinker.link(feature.properties['TO_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_FadhillaYouve_7_0() {
+            return {
+                pane: 'pane_FadhillaYouve_7',
+                opacity: 1,
+                color: 'rgba(103,143,176,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_FadhillaYouve_7');
+        map.getPane('pane_FadhillaYouve_7').style.zIndex = 407;
+        map.getPane('pane_FadhillaYouve_7').style['mix-blend-mode'] = 'normal';
+        var layer_FadhillaYouve_7 = new L.geoJson(json_FadhillaYouve_7, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_FadhillaYouve_7',
+            layerName: 'layer_FadhillaYouve_7',
+            pane: 'pane_FadhillaYouve_7',
+            onEachFeature: pop_FadhillaYouve_7,
+            style: style_FadhillaYouve_7_0,
+        });
+        bounds_group.addLayer(layer_FadhillaYouve_7);
+        map.addLayer(layer_FadhillaYouve_7);
+        function pop_FadhillaNabila_8(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">DIST_KM</th>\
+                        <td>' + (feature.properties['DIST_KM'] !== null ? autolinker.link(feature.properties['DIST_KM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">DURATION_H</th>\
+                        <td>' + (feature.properties['DURATION_H'] !== null ? autolinker.link(feature.properties['DURATION_H'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PROFILE</th>\
+                        <td>' + (feature.properties['PROFILE'] !== null ? autolinker.link(feature.properties['PROFILE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PREF</th>\
+                        <td>' + (feature.properties['PREF'] !== null ? autolinker.link(feature.properties['PREF'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">OPTIONS</th>\
+                        <td>' + (feature.properties['OPTIONS'] !== null ? autolinker.link(feature.properties['OPTIONS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">FROM_ID</th>\
+                        <td>' + (feature.properties['FROM_ID'] !== null ? autolinker.link(feature.properties['FROM_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TO_ID</th>\
+                        <td>' + (feature.properties['TO_ID'] !== null ? autolinker.link(feature.properties['TO_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_FadhillaNabila_8_0() {
+            return {
+                pane: 'pane_FadhillaNabila_8',
+                opacity: 1,
+                color: 'rgba(176,161,119,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_FadhillaNabila_8');
+        map.getPane('pane_FadhillaNabila_8').style.zIndex = 408;
+        map.getPane('pane_FadhillaNabila_8').style['mix-blend-mode'] = 'normal';
+        var layer_FadhillaNabila_8 = new L.geoJson(json_FadhillaNabila_8, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_FadhillaNabila_8',
+            layerName: 'layer_FadhillaNabila_8',
+            pane: 'pane_FadhillaNabila_8',
+            onEachFeature: pop_FadhillaNabila_8,
+            style: style_FadhillaNabila_8_0,
+        });
+        bounds_group.addLayer(layer_FadhillaNabila_8);
+        map.addLayer(layer_FadhillaNabila_8);
+        function pop_FiqhiDezan_9(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">DIST_KM</th>\
+                        <td>' + (feature.properties['DIST_KM'] !== null ? autolinker.link(feature.properties['DIST_KM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">DURATION_H</th>\
+                        <td>' + (feature.properties['DURATION_H'] !== null ? autolinker.link(feature.properties['DURATION_H'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PROFILE</th>\
+                        <td>' + (feature.properties['PROFILE'] !== null ? autolinker.link(feature.properties['PROFILE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PREF</th>\
+                        <td>' + (feature.properties['PREF'] !== null ? autolinker.link(feature.properties['PREF'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">OPTIONS</th>\
+                        <td>' + (feature.properties['OPTIONS'] !== null ? autolinker.link(feature.properties['OPTIONS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">FROM_ID</th>\
+                        <td>' + (feature.properties['FROM_ID'] !== null ? autolinker.link(feature.properties['FROM_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TO_ID</th>\
+                        <td>' + (feature.properties['TO_ID'] !== null ? autolinker.link(feature.properties['TO_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_FiqhiDezan_9_0() {
+            return {
+                pane: 'pane_FiqhiDezan_9',
+                opacity: 1,
+                color: 'rgba(167,121,176,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_FiqhiDezan_9');
+        map.getPane('pane_FiqhiDezan_9').style.zIndex = 409;
+        map.getPane('pane_FiqhiDezan_9').style['mix-blend-mode'] = 'normal';
+        var layer_FiqhiDezan_9 = new L.geoJson(json_FiqhiDezan_9, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_FiqhiDezan_9',
+            layerName: 'layer_FiqhiDezan_9',
+            pane: 'pane_FiqhiDezan_9',
+            onEachFeature: pop_FiqhiDezan_9,
+            style: style_FiqhiDezan_9_0,
+        });
+        bounds_group.addLayer(layer_FiqhiDezan_9);
+        map.addLayer(layer_FiqhiDezan_9);
+        function pop_FiqhiNabila_10(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">DIST_KM</th>\
+                        <td>' + (feature.properties['DIST_KM'] !== null ? autolinker.link(feature.properties['DIST_KM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">DURATION_H</th>\
+                        <td>' + (feature.properties['DURATION_H'] !== null ? autolinker.link(feature.properties['DURATION_H'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PROFILE</th>\
+                        <td>' + (feature.properties['PROFILE'] !== null ? autolinker.link(feature.properties['PROFILE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PREF</th>\
+                        <td>' + (feature.properties['PREF'] !== null ? autolinker.link(feature.properties['PREF'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">OPTIONS</th>\
+                        <td>' + (feature.properties['OPTIONS'] !== null ? autolinker.link(feature.properties['OPTIONS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">FROM_ID</th>\
+                        <td>' + (feature.properties['FROM_ID'] !== null ? autolinker.link(feature.properties['FROM_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TO_ID</th>\
+                        <td>' + (feature.properties['TO_ID'] !== null ? autolinker.link(feature.properties['TO_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_FiqhiNabila_10_0() {
+            return {
+                pane: 'pane_FiqhiNabila_10',
+                opacity: 1,
+                color: 'rgba(154,176,36,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_FiqhiNabila_10');
+        map.getPane('pane_FiqhiNabila_10').style.zIndex = 410;
+        map.getPane('pane_FiqhiNabila_10').style['mix-blend-mode'] = 'normal';
+        var layer_FiqhiNabila_10 = new L.geoJson(json_FiqhiNabila_10, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_FiqhiNabila_10',
+            layerName: 'layer_FiqhiNabila_10',
+            pane: 'pane_FiqhiNabila_10',
+            onEachFeature: pop_FiqhiNabila_10,
+            style: style_FiqhiNabila_10_0,
+        });
+        bounds_group.addLayer(layer_FiqhiNabila_10);
+        map.addLayer(layer_FiqhiNabila_10);
+        function pop_FiqhiYouve_11(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">DIST_KM</th>\
+                        <td>' + (feature.properties['DIST_KM'] !== null ? autolinker.link(feature.properties['DIST_KM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">DURATION_H</th>\
+                        <td>' + (feature.properties['DURATION_H'] !== null ? autolinker.link(feature.properties['DURATION_H'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PROFILE</th>\
+                        <td>' + (feature.properties['PROFILE'] !== null ? autolinker.link(feature.properties['PROFILE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PREF</th>\
+                        <td>' + (feature.properties['PREF'] !== null ? autolinker.link(feature.properties['PREF'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">OPTIONS</th>\
+                        <td>' + (feature.properties['OPTIONS'] !== null ? autolinker.link(feature.properties['OPTIONS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">FROM_ID</th>\
+                        <td>' + (feature.properties['FROM_ID'] !== null ? autolinker.link(feature.properties['FROM_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TO_ID</th>\
+                        <td>' + (feature.properties['TO_ID'] !== null ? autolinker.link(feature.properties['TO_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_FiqhiYouve_11_0() {
+            return {
+                pane: 'pane_FiqhiYouve_11',
+                opacity: 1,
+                color: 'rgba(176,176,176,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_FiqhiYouve_11');
+        map.getPane('pane_FiqhiYouve_11').style.zIndex = 411;
+        map.getPane('pane_FiqhiYouve_11').style['mix-blend-mode'] = 'normal';
+        var layer_FiqhiYouve_11 = new L.geoJson(json_FiqhiYouve_11, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_FiqhiYouve_11',
+            layerName: 'layer_FiqhiYouve_11',
+            pane: 'pane_FiqhiYouve_11',
+            onEachFeature: pop_FiqhiYouve_11,
+            style: style_FiqhiYouve_11_0,
+        });
+        bounds_group.addLayer(layer_FiqhiYouve_11);
+        map.addLayer(layer_FiqhiYouve_11);
+        function pop_FiqhiShannia_12(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">DIST_KM</th>\
+                        <td>' + (feature.properties['DIST_KM'] !== null ? autolinker.link(feature.properties['DIST_KM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">DURATION_H</th>\
+                        <td>' + (feature.properties['DURATION_H'] !== null ? autolinker.link(feature.properties['DURATION_H'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PROFILE</th>\
+                        <td>' + (feature.properties['PROFILE'] !== null ? autolinker.link(feature.properties['PROFILE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PREF</th>\
+                        <td>' + (feature.properties['PREF'] !== null ? autolinker.link(feature.properties['PREF'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">OPTIONS</th>\
+                        <td>' + (feature.properties['OPTIONS'] !== null ? autolinker.link(feature.properties['OPTIONS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">FROM_ID</th>\
+                        <td>' + (feature.properties['FROM_ID'] !== null ? autolinker.link(feature.properties['FROM_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TO_ID</th>\
+                        <td>' + (feature.properties['TO_ID'] !== null ? autolinker.link(feature.properties['TO_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_FiqhiShannia_12_0() {
+            return {
+                pane: 'pane_FiqhiShannia_12',
+                opacity: 1,
+                color: 'rgba(125,176,118,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_FiqhiShannia_12');
+        map.getPane('pane_FiqhiShannia_12').style.zIndex = 412;
+        map.getPane('pane_FiqhiShannia_12').style['mix-blend-mode'] = 'normal';
+        var layer_FiqhiShannia_12 = new L.geoJson(json_FiqhiShannia_12, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_FiqhiShannia_12',
+            layerName: 'layer_FiqhiShannia_12',
+            pane: 'pane_FiqhiShannia_12',
+            onEachFeature: pop_FiqhiShannia_12,
+            style: style_FiqhiShannia_12_0,
+        });
+        bounds_group.addLayer(layer_FiqhiShannia_12);
+        map.addLayer(layer_FiqhiShannia_12);
+        function pop_FadhillaVajri_13(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">DIST_KM</th>\
+                        <td>' + (feature.properties['DIST_KM'] !== null ? autolinker.link(feature.properties['DIST_KM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">DURATION_H</th>\
+                        <td>' + (feature.properties['DURATION_H'] !== null ? autolinker.link(feature.properties['DURATION_H'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PROFILE</th>\
+                        <td>' + (feature.properties['PROFILE'] !== null ? autolinker.link(feature.properties['PROFILE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PREF</th>\
+                        <td>' + (feature.properties['PREF'] !== null ? autolinker.link(feature.properties['PREF'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">OPTIONS</th>\
+                        <td>' + (feature.properties['OPTIONS'] !== null ? autolinker.link(feature.properties['OPTIONS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">FROM_ID</th>\
+                        <td>' + (feature.properties['FROM_ID'] !== null ? autolinker.link(feature.properties['FROM_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TO_ID</th>\
+                        <td>' + (feature.properties['TO_ID'] !== null ? autolinker.link(feature.properties['TO_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_FadhillaVajri_13_0() {
+            return {
+                pane: 'pane_FadhillaVajri_13',
+                opacity: 1,
+                color: 'rgba(15,176,40,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_FadhillaVajri_13');
+        map.getPane('pane_FadhillaVajri_13').style.zIndex = 413;
+        map.getPane('pane_FadhillaVajri_13').style['mix-blend-mode'] = 'normal';
+        var layer_FadhillaVajri_13 = new L.geoJson(json_FadhillaVajri_13, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_FadhillaVajri_13',
+            layerName: 'layer_FadhillaVajri_13',
+            pane: 'pane_FadhillaVajri_13',
+            onEachFeature: pop_FadhillaVajri_13,
+            style: style_FadhillaVajri_13_0,
+        });
+        bounds_group.addLayer(layer_FadhillaVajri_13);
+        map.addLayer(layer_FadhillaVajri_13);
+        function pop_FiqhiAgus_14(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">DIST_KM</th>\
+                        <td>' + (feature.properties['DIST_KM'] !== null ? autolinker.link(feature.properties['DIST_KM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">DURATION_H</th>\
+                        <td>' + (feature.properties['DURATION_H'] !== null ? autolinker.link(feature.properties['DURATION_H'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PROFILE</th>\
+                        <td>' + (feature.properties['PROFILE'] !== null ? autolinker.link(feature.properties['PROFILE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PREF</th>\
+                        <td>' + (feature.properties['PREF'] !== null ? autolinker.link(feature.properties['PREF'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">OPTIONS</th>\
+                        <td>' + (feature.properties['OPTIONS'] !== null ? autolinker.link(feature.properties['OPTIONS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">FROM_ID</th>\
+                        <td>' + (feature.properties['FROM_ID'] !== null ? autolinker.link(feature.properties['FROM_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TO_ID</th>\
+                        <td>' + (feature.properties['TO_ID'] !== null ? autolinker.link(feature.properties['TO_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_FiqhiAgus_14_0() {
+            return {
+                pane: 'pane_FiqhiAgus_14',
+                opacity: 1,
+                color: 'rgba(182,44,84,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_FiqhiAgus_14');
+        map.getPane('pane_FiqhiAgus_14').style.zIndex = 414;
+        map.getPane('pane_FiqhiAgus_14').style['mix-blend-mode'] = 'normal';
+        var layer_FiqhiAgus_14 = new L.geoJson(json_FiqhiAgus_14, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_FiqhiAgus_14',
+            layerName: 'layer_FiqhiAgus_14',
+            pane: 'pane_FiqhiAgus_14',
+            onEachFeature: pop_FiqhiAgus_14,
+            style: style_FiqhiAgus_14_0,
+        });
+        bounds_group.addLayer(layer_FiqhiAgus_14);
+        map.addLayer(layer_FiqhiAgus_14);
+        function pop_FiqhiRafael_15(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">DIST_KM</th>\
+                        <td>' + (feature.properties['DIST_KM'] !== null ? autolinker.link(feature.properties['DIST_KM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">DURATION_H</th>\
+                        <td>' + (feature.properties['DURATION_H'] !== null ? autolinker.link(feature.properties['DURATION_H'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PROFILE</th>\
+                        <td>' + (feature.properties['PROFILE'] !== null ? autolinker.link(feature.properties['PROFILE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PREF</th>\
+                        <td>' + (feature.properties['PREF'] !== null ? autolinker.link(feature.properties['PREF'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">OPTIONS</th>\
+                        <td>' + (feature.properties['OPTIONS'] !== null ? autolinker.link(feature.properties['OPTIONS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">FROM_ID</th>\
+                        <td>' + (feature.properties['FROM_ID'] !== null ? autolinker.link(feature.properties['FROM_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TO_ID</th>\
+                        <td>' + (feature.properties['TO_ID'] !== null ? autolinker.link(feature.properties['TO_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_FiqhiRafael_15_0() {
+            return {
+                pane: 'pane_FiqhiRafael_15',
+                opacity: 1,
+                color: 'rgba(255,255,74,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_FiqhiRafael_15');
+        map.getPane('pane_FiqhiRafael_15').style.zIndex = 415;
+        map.getPane('pane_FiqhiRafael_15').style['mix-blend-mode'] = 'normal';
+        var layer_FiqhiRafael_15 = new L.geoJson(json_FiqhiRafael_15, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_FiqhiRafael_15',
+            layerName: 'layer_FiqhiRafael_15',
+            pane: 'pane_FiqhiRafael_15',
+            onEachFeature: pop_FiqhiRafael_15,
+            style: style_FiqhiRafael_15_0,
+        });
+        bounds_group.addLayer(layer_FiqhiRafael_15);
+        map.addLayer(layer_FiqhiRafael_15);
+        function pop_FiqhiVajri_16(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">DIST_KM</th>\
+                        <td>' + (feature.properties['DIST_KM'] !== null ? autolinker.link(feature.properties['DIST_KM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">DURATION_H</th>\
+                        <td>' + (feature.properties['DURATION_H'] !== null ? autolinker.link(feature.properties['DURATION_H'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PROFILE</th>\
+                        <td>' + (feature.properties['PROFILE'] !== null ? autolinker.link(feature.properties['PROFILE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PREF</th>\
+                        <td>' + (feature.properties['PREF'] !== null ? autolinker.link(feature.properties['PREF'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">OPTIONS</th>\
+                        <td>' + (feature.properties['OPTIONS'] !== null ? autolinker.link(feature.properties['OPTIONS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">FROM_ID</th>\
+                        <td>' + (feature.properties['FROM_ID'] !== null ? autolinker.link(feature.properties['FROM_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TO_ID</th>\
+                        <td>' + (feature.properties['TO_ID'] !== null ? autolinker.link(feature.properties['TO_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_FiqhiVajri_16_0() {
+            return {
+                pane: 'pane_FiqhiVajri_16',
+                opacity: 1,
+                color: 'rgba(255,170,173,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_FiqhiVajri_16');
+        map.getPane('pane_FiqhiVajri_16').style.zIndex = 416;
+        map.getPane('pane_FiqhiVajri_16').style['mix-blend-mode'] = 'normal';
+        var layer_FiqhiVajri_16 = new L.geoJson(json_FiqhiVajri_16, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_FiqhiVajri_16',
+            layerName: 'layer_FiqhiVajri_16',
+            pane: 'pane_FiqhiVajri_16',
+            onEachFeature: pop_FiqhiVajri_16,
+            style: style_FiqhiVajri_16_0,
+        });
+        bounds_group.addLayer(layer_FiqhiVajri_16);
+        map.addLayer(layer_FiqhiVajri_16);
+        function pop_FadhillaDezan_17(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">DIST_KM</th>\
+                        <td>' + (feature.properties['DIST_KM'] !== null ? autolinker.link(feature.properties['DIST_KM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">DURATION_H</th>\
+                        <td>' + (feature.properties['DURATION_H'] !== null ? autolinker.link(feature.properties['DURATION_H'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PROFILE</th>\
+                        <td>' + (feature.properties['PROFILE'] !== null ? autolinker.link(feature.properties['PROFILE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PREF</th>\
+                        <td>' + (feature.properties['PREF'] !== null ? autolinker.link(feature.properties['PREF'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">OPTIONS</th>\
+                        <td>' + (feature.properties['OPTIONS'] !== null ? autolinker.link(feature.properties['OPTIONS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">FROM_ID</th>\
+                        <td>' + (feature.properties['FROM_ID'] !== null ? autolinker.link(feature.properties['FROM_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TO_ID</th>\
+                        <td>' + (feature.properties['TO_ID'] !== null ? autolinker.link(feature.properties['TO_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_FadhillaDezan_17_0() {
+            return {
+                pane: 'pane_FadhillaDezan_17',
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_FadhillaDezan_17');
+        map.getPane('pane_FadhillaDezan_17').style.zIndex = 417;
+        map.getPane('pane_FadhillaDezan_17').style['mix-blend-mode'] = 'normal';
+        var layer_FadhillaDezan_17 = new L.geoJson(json_FadhillaDezan_17, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_FadhillaDezan_17',
+            layerName: 'layer_FadhillaDezan_17',
+            pane: 'pane_FadhillaDezan_17',
+            onEachFeature: pop_FadhillaDezan_17,
+            style: style_FadhillaDezan_17_0,
+        });
+        bounds_group.addLayer(layer_FadhillaDezan_17);
+        map.addLayer(layer_FadhillaDezan_17);
+        function pop_FadhillaAmel_18(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">DIST_KM</th>\
+                        <td>' + (feature.properties['DIST_KM'] !== null ? autolinker.link(feature.properties['DIST_KM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">DURATION_H</th>\
+                        <td>' + (feature.properties['DURATION_H'] !== null ? autolinker.link(feature.properties['DURATION_H'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PROFILE</th>\
+                        <td>' + (feature.properties['PROFILE'] !== null ? autolinker.link(feature.properties['PROFILE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PREF</th>\
+                        <td>' + (feature.properties['PREF'] !== null ? autolinker.link(feature.properties['PREF'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">OPTIONS</th>\
+                        <td>' + (feature.properties['OPTIONS'] !== null ? autolinker.link(feature.properties['OPTIONS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">FROM_ID</th>\
+                        <td>' + (feature.properties['FROM_ID'] !== null ? autolinker.link(feature.properties['FROM_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TO_ID</th>\
+                        <td>' + (feature.properties['TO_ID'] !== null ? autolinker.link(feature.properties['TO_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_FadhillaAmel_18_0() {
+            return {
+                pane: 'pane_FadhillaAmel_18',
+                opacity: 1,
+                color: 'rgba(184,210,255,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_FadhillaAmel_18');
+        map.getPane('pane_FadhillaAmel_18').style.zIndex = 418;
+        map.getPane('pane_FadhillaAmel_18').style['mix-blend-mode'] = 'normal';
+        var layer_FadhillaAmel_18 = new L.geoJson(json_FadhillaAmel_18, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_FadhillaAmel_18',
+            layerName: 'layer_FadhillaAmel_18',
+            pane: 'pane_FadhillaAmel_18',
+            onEachFeature: pop_FadhillaAmel_18,
+            style: style_FadhillaAmel_18_0,
+        });
+        bounds_group.addLayer(layer_FadhillaAmel_18);
+        map.addLayer(layer_FadhillaAmel_18);
+        function pop_FadhillaRafael_19(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">DIST_KM</th>\
+                        <td>' + (feature.properties['DIST_KM'] !== null ? autolinker.link(feature.properties['DIST_KM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">DURATION_H</th>\
+                        <td>' + (feature.properties['DURATION_H'] !== null ? autolinker.link(feature.properties['DURATION_H'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PROFILE</th>\
+                        <td>' + (feature.properties['PROFILE'] !== null ? autolinker.link(feature.properties['PROFILE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PREF</th>\
+                        <td>' + (feature.properties['PREF'] !== null ? autolinker.link(feature.properties['PREF'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">OPTIONS</th>\
+                        <td>' + (feature.properties['OPTIONS'] !== null ? autolinker.link(feature.properties['OPTIONS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">FROM_ID</th>\
+                        <td>' + (feature.properties['FROM_ID'] !== null ? autolinker.link(feature.properties['FROM_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TO_ID</th>\
+                        <td>' + (feature.properties['TO_ID'] !== null ? autolinker.link(feature.properties['TO_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_FadhillaRafael_19_0() {
+            return {
+                pane: 'pane_FadhillaRafael_19',
+                opacity: 1,
+                color: 'rgba(229,242,178,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_FadhillaRafael_19');
+        map.getPane('pane_FadhillaRafael_19').style.zIndex = 419;
+        map.getPane('pane_FadhillaRafael_19').style['mix-blend-mode'] = 'normal';
+        var layer_FadhillaRafael_19 = new L.geoJson(json_FadhillaRafael_19, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_FadhillaRafael_19',
+            layerName: 'layer_FadhillaRafael_19',
+            pane: 'pane_FadhillaRafael_19',
+            onEachFeature: pop_FadhillaRafael_19,
+            style: style_FadhillaRafael_19_0,
+        });
+        bounds_group.addLayer(layer_FadhillaRafael_19);
+        map.addLayer(layer_FadhillaRafael_19);
+        function pop_FadhillaRayhan_20(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">DIST_KM</th>\
+                        <td>' + (feature.properties['DIST_KM'] !== null ? autolinker.link(feature.properties['DIST_KM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">DURATION_H</th>\
+                        <td>' + (feature.properties['DURATION_H'] !== null ? autolinker.link(feature.properties['DURATION_H'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PROFILE</th>\
+                        <td>' + (feature.properties['PROFILE'] !== null ? autolinker.link(feature.properties['PROFILE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PREF</th>\
+                        <td>' + (feature.properties['PREF'] !== null ? autolinker.link(feature.properties['PREF'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">OPTIONS</th>\
+                        <td>' + (feature.properties['OPTIONS'] !== null ? autolinker.link(feature.properties['OPTIONS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">FROM_ID</th>\
+                        <td>' + (feature.properties['FROM_ID'] !== null ? autolinker.link(feature.properties['FROM_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">TO_ID</th>\
+                        <td>' + (feature.properties['TO_ID'] !== null ? autolinker.link(feature.properties['TO_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_FadhillaRayhan_20_0() {
+            return {
+                pane: 'pane_FadhillaRayhan_20',
+                opacity: 1,
+                color: 'rgba(84,176,74,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_FadhillaRayhan_20');
+        map.getPane('pane_FadhillaRayhan_20').style.zIndex = 420;
+        map.getPane('pane_FadhillaRayhan_20').style['mix-blend-mode'] = 'normal';
+        var layer_FadhillaRayhan_20 = new L.geoJson(json_FadhillaRayhan_20, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_FadhillaRayhan_20',
+            layerName: 'layer_FadhillaRayhan_20',
+            pane: 'pane_FadhillaRayhan_20',
+            onEachFeature: pop_FadhillaRayhan_20,
+            style: style_FadhillaRayhan_20_0,
+        });
+        bounds_group.addLayer(layer_FadhillaRayhan_20);
+        map.addLayer(layer_FadhillaRayhan_20);
+        var osmGeocoder = new L.Control.Geocoder({
+            collapsed: true,
+            position: 'topleft',
+            text: 'Search',
+            title: 'Testing'
+        }).addTo(map);
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .className += ' fa fa-search';
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .title += 'Search for a place';
+        setBounds();
+        var i = 0;
+        layer_KoordinatKelompok_1.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['Lokasi'] !== null?String('<div style="color: #323232; font-size: 10pt; font-weight: bold; font-family: \'Open Sans\', sans-serif;">' + layer.feature.properties['Lokasi']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_KoordinatKelompok_1'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+        var i = 0;
+        layer_KoordinatMenfas_2.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['Lokasi'] !== null?String('<div style="color: #323232; font-size: 10pt; font-weight: bold; font-family: \'Open Sans\', sans-serif;">' + layer.feature.properties['Lokasi']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_KoordinatMenfas_2'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+        var i = 0;
+        layer_FadhillaRayhan_20.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((exp_label_FadhillaRayhan_20_eval_expression(context) !== null?String('<div style="color: #323232; font-size: 10pt; font-weight: bold; font-family: \'Open Sans\', sans-serif;">' + exp_label_FadhillaRayhan_20_eval_expression(context)) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_FadhillaRayhan_20'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+        resetLabels([layer_KoordinatKelompok_1,layer_KoordinatMenfas_2,layer_FadhillaRayhan_20]);
+        map.on("zoomend", function(){
+            resetLabels([layer_KoordinatKelompok_1,layer_KoordinatMenfas_2,layer_FadhillaRayhan_20]);
+        });
+        map.on("layeradd", function(){
+            resetLabels([layer_KoordinatKelompok_1,layer_KoordinatMenfas_2,layer_FadhillaRayhan_20]);
+        });
+        map.on("layerremove", function(){
+            resetLabels([layer_KoordinatKelompok_1,layer_KoordinatMenfas_2,layer_FadhillaRayhan_20]);
+        });
+        </script>
+    </body>
+</html>
